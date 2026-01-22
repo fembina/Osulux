@@ -1,9 +1,13 @@
 package com.osuplayer.app;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Locale;
+import java.util.Optional;
 
 import com.osuplayer.config.ConfigManager;
 import com.osuplayer.discord.DiscordRichPresence;
@@ -125,8 +129,12 @@ public class MainApp extends Application {
         audioPlayer = factory.mediaPlayers().newEmbeddedMediaPlayer();
         videoPlayer = factory.mediaPlayers().newEmbeddedMediaPlayer();
 
-        discord = new DiscordRichPresence();
-        discord.start(1418149866168909846L);
+        if (shouldEnableDiscord()) {
+            discord = new DiscordRichPresence();
+            discord.start(1418149866168909846L);
+        } else {
+            discord = null;
+        }
 
         launch(args);
     }
@@ -159,5 +167,31 @@ public class MainApp extends Application {
         } catch (RuntimeException e) {
             return null;
         }
+    }
+
+    private static boolean shouldEnableDiscord() {
+        String env = Optional.ofNullable(System.getenv("OSULUX_DISCORD"))
+            .orElse(Optional.ofNullable(System.getProperty("osulux.discord")).orElse(""));
+
+        if (!env.isBlank()) {
+            String v = env.trim().toLowerCase(Locale.ROOT);
+            if (v.equals("1") || v.equals("true") || v.equals("on")) {
+                return isDiscordIpcAvailable();
+            }
+            return false;
+        }
+
+        return isDiscordIpcAvailable();
+    }
+
+    private static boolean isDiscordIpcAvailable() {
+        for (int i = 0; i < 10; i++) {
+            String pipe = "\\\\.\\pipe\\discord-ipc-" + i;
+            try (RandomAccessFile raf = new RandomAccessFile(pipe, "rw")) {
+                return true;
+            } catch (IOException ignored) {
+            }
+        }
+        return false;
     }
 }
