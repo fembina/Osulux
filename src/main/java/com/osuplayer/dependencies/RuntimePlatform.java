@@ -1,21 +1,35 @@
 package com.osuplayer.dependencies;
 
+import javafx.util.Pair;
+
+import java.util.List;
+
 public enum RuntimePlatform {
     WINDOWS,
     LINUX,
     OSX;
 
-    public static RuntimePlatform current() {
+    public static final RuntimePlatform CURRENT = current();
+
+    private static RuntimePlatform current() {
         var platform = System.getProperty("os.name").toLowerCase();
 
-        if (platform.contains("win")) {
-            return WINDOWS;
-        } else if (platform.contains("mac")) {
-            return OSX;
-        } else if (platform.contains("nix") || platform.contains("nux") || platform.contains("aix")) {
-            return LINUX;
+        for (var context : getPlatformsPatterns()) {
+            if (platform.contains(context.getKey())) {
+                return context.getValue();
+            }
         }
 
         throw new UnsupportedOperationException("Unsupported operating system: " + platform);
+    }
+
+    private static List<Pair<String, RuntimePlatform>> getPlatformsPatterns() {
+        return List.of(
+            new Pair<>("win", WINDOWS),
+            new Pair<>("mac", OSX),
+            new Pair<>("nix", LINUX),
+            new Pair<>("nux", LINUX),
+            new Pair<>("aix", LINUX)
+        );
     }
 }

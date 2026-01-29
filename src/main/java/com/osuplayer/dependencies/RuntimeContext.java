@@ -4,6 +4,6 @@ public record RuntimeContext(RuntimePlatform platform, RuntimeArchitecture archi
     public static RuntimeContext CURRENT = current();
 
     private static RuntimeContext current() {
-        return new RuntimeContext(RuntimePlatform.current(), RuntimeArchitecture.current());
+        return new RuntimeContext(RuntimePlatform.CURRENT, RuntimeArchitecture.CURRENT);
     }
 }
